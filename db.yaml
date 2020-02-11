@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-service
+spec:
+  selector:
+    app: db
+  ports:
+  - port: 5432
+    targetPort: 5432
+
+
+--- 
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: db
+spec:
+  serviceName: db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      volumes:
+        - name: loaddata
+          emptyDir: {}
+      initContainers:
+        - name: load
+          image: mnevadom/dump:v5
+          volumeMounts:
+            - name: loaddata
+              mountPath: /tmp
+          command: ["sh"]
+          args: ["-c", "cp /dump/data.sql /tmp/data.sql"]
+      containers:
+      - name: db-cont
+        image: postgres:9.4        
+        ports:
+        - containerPort: 5432
+        env: 
+          - name: POSTGRES_PASSWORD
+            value: admin1234
+          - name: POSTGRES_USER
+            value: myadmin
+          - name: POSTGRES_DB
+            value: mydb
+        volumeMounts:
+          - mountPath: /docker-entrypoint-initdb.d
+            name: loaddata
+      
+

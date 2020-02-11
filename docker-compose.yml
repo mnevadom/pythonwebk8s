@@ -1,0 +1,8 @@
+version: '3'
+services: 
+  myapp: 
+    container_name: prpy
+    image: mnevadom/pyk8s:v6
+    ports: 
+      - "8080:8080"
+    build: .
